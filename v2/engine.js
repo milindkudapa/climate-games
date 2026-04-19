@@ -219,23 +219,35 @@ function solveNash(alphas, funds, maxIter) {
 }
 
 // ── Critical alpha ────────────────────────────────────────────────
-// α_crit where bloc is indifferent between IN and OUT
-// Given all other blocs' membership fixed
+// α_crit where a bloc is indifferent between joining and its outside option (All Low = $0).
+//
+// Framing: bloc compares Grand Coalition membership against the All Low baseline,
+// not against "others are already IN and I'm the last holdout."
+//
+// dUr = W_regional at IN  (absolute, vs All Low baseline = 0)
+// dUg = W_global_allIN − W_global_without_bloc  (marginal global contribution)
+//
+// α × dUg + (1−α) × dUr = 0  →  α_crit = −dUr / (dUg − dUr)
+//
+// Example: GCC has dUr = −$13tn, dUg = +$3tn → α_crit = 13/(13+3) ≈ 0.81
+// meaning GCC needs to place 81% weight on global welfare to voluntarily join.
 function criticalAlpha(regionKey, membership, funds) {
   var memIn = Object.assign({}, membership); memIn[regionKey] = true;
   var memOut = Object.assign({}, membership); memOut[regionKey] = false;
 
-  var outIn = computeOutcome(memIn, funds);
+  var outIn  = computeOutcome(memIn,  funds);
   var outOut = computeOutcome(memOut, funds);
 
-  var dUr = outIn.blocs[regionKey].net - outOut.blocs[regionKey].net;
+  // dUr: bloc's absolute regional welfare at IN (All Low baseline = 0)
+  var dUr = outIn.blocs[regionKey].net;
+  // dUg: bloc's marginal contribution to global welfare
   var dUg = outIn.globalNet - outOut.globalNet;
 
-  // If regionally better to be IN, α_crit ≤ 0 → always IN
+  // If regionally beneficial to be IN, α_crit ≤ 0 → always joins
   if (dUr >= 0) return 0;
-  // If globally worse to be IN, α_crit → ∞ → never IN
+  // If joining makes global worse, α_crit → ∞ → needs compensation regardless
   if (dUg <= 0) return 999;
-  // α_crit = -dUr / (dUg - dUr)
+  // α_crit = −dUr / (dUg − dUr)
   return -dUr / (dUg - dUr);
 }
 
