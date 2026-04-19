@@ -507,35 +507,73 @@ function AlphaSpectrumPanel({funds, membership}) {
   return (
     <div>
       <Card title="Critical Alpha Values">
-        <P>The <b>critical alpha ({"\u03B1"}<sub>crit</sub>)</b> is the minimum weight on global welfare needed for a bloc to prefer joining the coalition. Below this alpha, the bloc defects.</P>
-        <P><b>{"\u03B1"} = 0</b>: purely regional interest. <b>{"\u03B1"} = 1</b>: fully global interest. A bloc with {"\u03B1"} {">"} {"\u03B1"}<sub>crit</sub> stays IN.</P>
+        <P>The <b>critical alpha ({"\u03B1"}<sub>crit</sub>)</b> is the minimum weight on global welfare needed for a bloc to prefer joining the coalition over its best outside option.</P>
+        <P>A bloc compares joining (W<sub>in</sub>) against the better of: (a) free-riding while others pay, or (b) the All Low world ($0 baseline). High {"\u03B1"}<sub>crit</sub> means the bloc needs strong global altruism to join voluntarily.</P>
         <table style={tableS}>
           <thead><tr>
             <th style={{...thS,textAlign:"left"}}>Bloc</th>
             <th style={thS}>{"\u03B1"}<sub>crit</sub> (all others IN)</th>
             <th style={thS}>{"\u03B1"}<sub>crit</sub> (current config)</th>
-            <th style={thS}>Status</th>
-            <th style={thS}>Interpretation</th>
+            <th style={thS}>Type</th>
           </tr></thead>
           <tbody>
             {CG.REGIONS.map(r => {
               const ca = critAllIn[r.key];
               const cc = critCurrent[r.key];
-              const interp = ca <= 0 ? "Always joins (net positive regionally)"
-                           : ca >= 1 ? "Needs compensation (never joins alone)"
-                           : `Joins if \u03B1 \u2265 ${ca.toFixed(2)}`;
+
+              // Compute breakdown for explanation
+              const memIn  = {...CG.engine.defaultMembership(), [r.key]: true};
+              const memOut = {...CG.engine.defaultMembership(), [r.key]: false};
+              const outIn  = CG.engine.computeOutcome(memIn,  funds);
+              const outOut = CG.engine.computeOutcome(memOut, funds);
+              const W_in   = outIn.blocs[r.key].net;
+              const W_out  = outOut.blocs[r.key].net;
+              const outside = Math.max(0, W_out);
+              const type = W_in >= outside ? "voluntary" : (W_out > 0 ? "free-rider" : "absolute cost");
+              const typeColor = W_in >= outside ? C.ok : (W_out > 0 ? C.warn : C.bad);
+
               return (
                 <tr key={r.key}>
                   <td style={{...tdS,textAlign:"left"}}><span style={{display:"inline-block",width:8,height:8,background:r.color,marginRight:6,borderRadius:2}}/>{r.name}</td>
                   <td style={{...tdS, fontWeight:600}}>{ca<10? ca.toFixed(3):"n/a"}</td>
                   <td style={tdS}>{cc<10? cc.toFixed(3):"n/a"}</td>
-                  <td style={{...tdS, color:ca<=0?C.ok:ca>=1?C.bad:C.warn}}>{ca<=0?"\u2713 Voluntary":ca>=1?"\u2717 Needs aid":"Conditional"}</td>
-                  <td style={{...tdS, textAlign:"left", fontSize:11, color:C.dim}}>{interp}</td>
+                  <td style={{...tdS, color:typeColor, textAlign:"left", fontWeight:500}}>{type}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+      </Card>
+
+      <Card title="Why each bloc has its critical alpha">
+        <div style={{fontSize:12, lineHeight:1.7}}>
+          <div style={{marginBottom:14}}>
+            <div style={{fontWeight:700, color:C.ok, marginBottom:2}}>{"\u03B1"}<sub>crit</sub> = 0 — Voluntary joiners</div>
+            <div style={{paddingLeft:12}}>
+              <div style={{marginBottom:6}}><b>China ({"\u03B1"}<sub>crit</sub> = 0.00)</b>: The world's largest emitter (28.6% abatement share) saves $13.9tn in climate damages while paying $2.9tn in transition costs and only $520bn in fossil rent loss. Net: <b>+$10.5tn</b>. China gains more from joining than from free-riding (+$9.1tn), because its huge abatement share means its own participation substantially lowers global temperature.</div>
+              <div style={{marginBottom:6}}><b>India ({"\u03B1"}<sub>crit</sub> = 0.00)</b>: Extreme climate vulnerability drives $29.7tn in damage savings — the second highest globally — against only $1.2tn in transition costs and negligible rent loss ($44bn). Net: <b>+$28.4tn</b>. Even as a free-rider India gains $23.1tn, but joining adds another $5.3tn because its 20.2% abatement share meaningfully reduces temperature.</div>
+              <div style={{marginBottom:6}}><b>ASEAN ({"\u03B1"}<sub>crit</sub> = 0.00)</b>: Highly climate-vulnerable (sea-level rise, monsoon disruption) with $22.2tn in damage savings vs $1.7tn transition cost and zero rent loss. Net: <b>+$20.4tn</b>. ASEAN's 10.5% abatement share means joining adds $1.1tn over free-riding — small but still positive, so it never needs global altruism to participate.</div>
+            </div>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <div style={{fontWeight:700, color:C.warn, marginBottom:2}}>{"\u03B1"}<sub>crit</sub> {">"} 0 — Free-rider temptation</div>
+            <div style={{paddingLeft:12}}>
+              <div style={{marginBottom:6}}><b>Latin America ({"\u03B1"}<sub>crit</sub> = 0.08)</b>: Only slightly tempted to free-ride. Low transition cost ($788bn) but significant rent loss ($1.1tn, oil/gas exports). As a free-rider: +$10.3tn vs joining: +$9.9tn — a gap of just $367bn. Needs only 8% weight on global welfare, making it the easiest conditional joiner to persuade.</div>
+              <div style={{marginBottom:6}}><b>Europe ({"\u03B1"}<sub>crit</sub> = 0.13)</b>: No fossil rent loss but high transition cost ($1.5tn) relative to its small abatement share (6.3%). Europe saves $5.8tn in damages by joining vs $5.4tn as a free-rider — but pays $1.5tn for the privilege. The free-rider surplus of $1.1tn means Europe needs 13% global altruism. A modest ask, but it reveals that even wealthy blocs face a temptation to let others pay.</div>
+              <div style={{marginBottom:6}}><b>Africa ({"\u03B1"}<sub>crit</sub> = 0.19)</b>: The paradox of the most climate-vulnerable continent. Africa saves a massive $48tn in damages, but faces the highest transition cost of any bloc ($6.8tn, driven by high WACC in developing economies) plus $1.4tn in fossil rent loss. As a free-rider: +$41.5tn vs joining: +$39.8tn. Africa loses $1.7tn by joining — needing 19% global weight — despite being the biggest beneficiary of climate action.</div>
+              <div style={{marginBottom:6}}><b>North America ({"\u03B1"}<sub>crit</sub> = 0.22)</b>: The highest free-rider temptation among developed blocs. NAM has the second-highest transition cost ($3.8tn, costly grid/hard-to-abate sectors) but moderate damage savings ($5.4tn). As a free-rider: +$4.8tn vs joining: +$1.6tn — a $3.2tn gap. Needs 22% global altruism. NAM's large abatement share (11.1%) means its participation delivers $11.5tn to the world, but it captures very little of that benefit itself.</div>
+            </div>
+          </div>
+
+          <div style={{marginBottom:14}}>
+            <div style={{fontWeight:700, color:C.bad, marginBottom:2}}>{"\u03B1"}<sub>crit</sub> {"\u226B"} 0 — Absolute cost, needs compensation</div>
+            <div style={{paddingLeft:12}}>
+              <div style={{marginBottom:6}}><b>Russia ({"\u03B1"}<sub>crit</sub> = 0.27)</b>: Climate damages are small ($1.8tn saved) relative to transition cost ($1.8tn) and fossil rent loss ($2.2tn). Russia is a net loser at <b>-$2.1tn</b> in the Grand Coalition. Even as a free-rider, Russia loses $382bn from rent erosion. The All Low world ($0) is Russia's best outside option. Needs 27% global weight — or ~$2.1tn in side payments — to join.</div>
+              <div style={{marginBottom:6}}><b>GCC ({"\u03B1"}<sub>crit</sub> = 0.81)</b>: The hardest bloc to include. GCC's entire economy is built on fossil fuels: joining costs $13.4tn in rent loss plus $2.4tn in transition costs, while climate damage savings are only $2.7tn. Net: <b>-$13.2tn</b>. Meanwhile, GCC's small abatement share (4%) means its participation adds only $3.1tn to global welfare — a <b>4:1 cost-to-benefit ratio</b>. GCC must place 81% weight on global welfare to voluntarily join, essentially requiring near-pure altruism. This is why the Loss & Damage fund allocates $10tn to GCC in the Ideal World scenario.</div>
+            </div>
+          </div>
+        </div>
       </Card>
 
       <Card title={`Alpha Spectrum — Nash equilibrium as \u03B1 sweeps 0\u21921`}>
