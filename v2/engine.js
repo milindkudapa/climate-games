@@ -219,18 +219,20 @@ function solveNash(alphas, funds, maxIter) {
 }
 
 // ── Critical alpha ────────────────────────────────────────────────
-// α_crit where a bloc is indifferent between joining and its outside option (All Low = $0).
+// α_crit where a bloc is indifferent between joining and its best outside option.
 //
-// Framing: bloc compares Grand Coalition membership against the All Low baseline,
-// not against "others are already IN and I'm the last holdout."
+// Two reasons a bloc may need global altruism to join:
+//   1. W_in < 0: joining hurts absolutely (GCC, Russia)
+//   2. Free-rider gain: W_out > W_in > 0 — staying out while others pay is even better (EUR, NAM…)
 //
-// dUr = W_regional at IN  (absolute, vs All Low baseline = 0)
-// dUg = W_global_allIN − W_global_without_bloc  (marginal global contribution)
+// Unified formula: dUr = W_in − max(0, W_out)
+//   • If W_out ≤ 0: outside option is All Low ($0), so dUr = W_in  [GCC/Russia case]
+//   • If W_out > W_in: outside option is free-riding, so dUr = W_in − W_out  [free-rider case]
+//   • If W_in ≥ max(0, W_out): joining is the best option regardless → α_crit = 0
+//
+// dUg = W_global_allIN − W_global_without_bloc  (bloc's marginal global contribution)
 //
 // α × dUg + (1−α) × dUr = 0  →  α_crit = −dUr / (dUg − dUr)
-//
-// Example: GCC has dUr = −$13tn, dUg = +$3tn → α_crit = 13/(13+3) ≈ 0.81
-// meaning GCC needs to place 81% weight on global welfare to voluntarily join.
 function criticalAlpha(regionKey, membership, funds) {
   var memIn = Object.assign({}, membership); memIn[regionKey] = true;
   var memOut = Object.assign({}, membership); memOut[regionKey] = false;
@@ -238,14 +240,21 @@ function criticalAlpha(regionKey, membership, funds) {
   var outIn  = computeOutcome(memIn,  funds);
   var outOut = computeOutcome(memOut, funds);
 
-  // dUr: bloc's absolute regional welfare at IN (All Low baseline = 0)
-  var dUr = outIn.blocs[regionKey].net;
+  var W_in  = outIn.blocs[regionKey].net;
+  var W_out = outOut.blocs[regionKey].net;
+
+  // Outside option: better of free-riding (W_out) and not participating at all (0 = All Low)
+  var outsideOption = Math.max(0, W_out);
+
+  // dUr: how much joining costs vs best outside option
+  var dUr = W_in - outsideOption;
+
   // dUg: bloc's marginal contribution to global welfare
   var dUg = outIn.globalNet - outOut.globalNet;
 
-  // If regionally beneficial to be IN, α_crit ≤ 0 → always joins
+  // Joining is at least as good as outside option → always joins
   if (dUr >= 0) return 0;
-  // If joining makes global worse, α_crit → ∞ → needs compensation regardless
+  // Joining makes global worse (shouldn't happen) → needs compensation regardless
   if (dUg <= 0) return 999;
   // α_crit = −dUr / (dUg − dUr)
   return -dUr / (dUg - dUr);
