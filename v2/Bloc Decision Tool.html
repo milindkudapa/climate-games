@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Coalition Simulator — Climate Game</title>
+<meta name="viewport" content="width=1280"/>
+<style>
+  html, body { margin:0; padding:0; background:#f6f4ef; }
+  * { box-sizing: border-box; }
+  input[type=range] { height: 18px; }
+  input[type=number] { font-family: inherit; }
+  input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+  button:hover { filter: brightness(0.97); }
+  details summary:hover { color:#c2410c !important; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>window.onerror=function(m,s,l){document.getElementById("root").innerText="JS ERROR: "+m+" at "+s+":"+l;}</script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+<script src="data.js?v=8"></script>
+<script src="engine.js?v=8"></script>
+<script type="text/babel" src="ui.jsx?v=8"></script>
+<script type="text/babel" src="app.jsx?v=8"></script>
+<script type="text/babel">
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+  root.render(<App/>);
+</script>
+</body>
+</html>

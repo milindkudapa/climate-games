@@ -1,0 +1,11 @@
+{
+  "name": "climate-games",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install --prefix v1 && npm install --prefix v2",
+    "build:v1": "npm run build --prefix v1",
+    "build:v2": "npm run build --prefix v2",
+    "build": "npm run build:v1 && npm run build:v2",
+    "deploy": "bash deploy.sh"
+  }
+}

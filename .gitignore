@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+v1/node_modules/
+v2/node_modules/
+v1/dist/
+v2/dist/
+GCC.zip
+GCC/
