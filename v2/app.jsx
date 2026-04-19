@@ -545,6 +545,13 @@ function AlphaSpectrumPanel({funds, membership}) {
         </table>
       </Card>
 
+      <Card title="Key concepts: free-riding and altruism">
+        <div style={{fontSize:12, lineHeight:1.7}}>
+          <P><b>Free-riding</b> means a bloc stays OUT (Low ambition) — contributing zero to emission reduction — while benefiting from the lower temperatures that other blocs' abatement delivers. Climate mitigation is a <b>public good</b>: when China cuts emissions, the temperature falls for everyone, including blocs that paid nothing. A free-rider collects this benefit without bearing any transition cost. The {"\u03B1"}<sub>crit</sub> of a free-rider bloc (EUR, NAM, AFR, LAM) measures how much the marginal cost of joining exceeds the marginal personal benefit — the gap that free-riding exploits.</P>
+          <P><b>Altruism ({"\u03B1"})</b> is the weight a bloc places on global welfare vs its own. At {"\u03B1"} = 0, a bloc is purely self-interested: it joins only if joining earns more than staying out. At {"\u03B1"} = 1, it maximizes global welfare regardless of personal cost. In practice, {"\u03B1"} represents the degree of international cooperation, diplomatic pressure, or moral commitment that moves a bloc beyond narrow self-interest. A bloc with {"\u03B1"}<sub>crit</sub> = 0.22 (e.g. NAM) needs to internalize at least 22% of the global benefit to overcome its free-rider temptation. A bloc with {"\u03B1"}<sub>crit</sub> = 0.81 (GCC) needs to act as a near-altruist — or receive compensation via side payments.</P>
+        </div>
+      </Card>
+
       <Card title="Why each bloc has its critical alpha">
         <div style={{fontSize:12, lineHeight:1.7}}>
           <div style={{marginBottom:14}}>
